@@ -19,9 +19,6 @@
 #define LOG_TIME 0  // serial log for execution times
 
 // Configurations
-#define VERBOSE 0
-#define SERVER_URL 190
-#define FB_PATH "aneil"
 #define FB_WRITE_TIME_MIN 480
 
 const char* VERSION = "V0.01";
@@ -158,8 +155,9 @@ void loop1Sec() {
 }
 
 void loop10Sec() {
-     static unsigned long startTime = millis();
+    ensureServerStarted();
 
+    static unsigned long startTime = millis();
 }
 
 void loop1Min() {

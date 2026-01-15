@@ -11,6 +11,7 @@ extern const char* VERSION;
 extern int WIFI_ERR;
 
 #define TEST_MODE 1
+#define VERBOSE 1
 
 #define OFF 0
 #define ON 1
