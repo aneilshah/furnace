@@ -154,7 +154,7 @@ void webServer() {
         client.println();
         delay(10);
         client.stop();
-        VLog("Client disconnected.");
-        VLog("");
+        // VLog("Client disconnected.");
+        // VLog("");
     } 
 }

@@ -80,7 +80,7 @@ void gotoFurnPreHeat() {
     FurnState = FURN_PRE_HEAT;
     ledBlinkFast();
     preHeatCount = PREHEAT_TIME * LOOPS_PER_SEC;    // 30 seconds of pre-heat 
-    VLog("Furnqce Pre-Heat");
+    VLog("Furnace Pre-Heat");
     stateTimerLoops = 0;  
 }
 
@@ -124,7 +124,7 @@ void gotoFurnCoolDown() {
     FurnState = FURN_COOL_DOWN;
     ledBlinkSlow();
     coolDownCount = COOLDOWN_TIME * LOOPS_PER_SEC;    // 30 seconds of Cool Down   
-    VLog("Furnqce Cool Down");
+    VLog("Furnace Cool Down");
     stateTimerLoops = 0;   
 }
 

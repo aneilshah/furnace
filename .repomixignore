@@ -1,4 +1,3 @@
-
 # -----------------------------
 # Arduino / PlatformIO
 # -----------------------------
@@ -43,4 +42,3 @@ secrets.h
 # OTHERS (DO NOT COMMIT)
 # -----------------------------
 GPT/
-repomix-output.xml
