@@ -7,6 +7,7 @@ public:
   FurnaceFBRepo(FirebaseClient& c);
 
   void writeFurnaceData(bool writeDailyData);
+  void writeEventData(const String& eventText);
   void clearDailyFBWriteCount();
   int firebaseOK();
 

@@ -6,15 +6,10 @@
 #include "ntp.h"
 #include "firebase.h"
 #include "ledFunc.h"
+#include "test_mode.h"
 
-extern void Vlog(String);
-
-#define FURN_OFF 0
-#define FURN_PRE_HEAT 1
-#define FURN_ON 2
-#define FURN_COOL_DOWN 3
-#define FURN_ON_COUNTS  500  // 0.4V
-#define FURN_OFF_COUNTS 100  // 0.1V
+extern void VLog(String);
+extern void Log(String);
 
 #define PREHEAT_TIME 70     // sec
 #define COOLDOWN_TIME 100   // sec
@@ -43,7 +38,7 @@ long LastFurnaceOffTimeLoops = 0;
 // Local Variables
 int preHeatCount = 0;
 int coolDownCount = 0;
-int FurnState = FURN_OFF;
+int FurnaceState= FURN_OFF;
 int firstEvent = 1;    // Dont update average on first event
 int stateTimerLoops = 0;
 
@@ -54,14 +49,17 @@ Buffer CountData;
 DataStore Counts;
 
 // Events
-Event furnaceTestEvent;
 Event writeFirebaseEvent;
 
+int getFurnaceState() {
+   return FurnaceState;
+}
+
 void processFurnaceEvent() {
-    if (FurnState == FURN_OFF) processFurnOff();
-    else if (FurnState == FURN_PRE_HEAT) processFurnPreHeat();
-    else if (FurnState == FURN_ON) processFurnOn();
-    else if (FurnState == FURN_COOL_DOWN) processFurnCoolDown();
+    if (FurnaceState== FURN_OFF) processFurnOff();
+    else if (FurnaceState== FURN_PRE_HEAT) processFurnPreHeat();
+    else if (FurnaceState== FURN_ON) processFurnOn();
+    else if (FurnaceState== FURN_COOL_DOWN) processFurnCoolDown();
     else gotoFurnOff();    // Should never get here, default to OFF
 
     stateTimerLoops++;
@@ -70,17 +68,15 @@ void processFurnaceEvent() {
 void processFurnOff() {
     FURNACE_OFF_TIME_LOOPS++;
     LAST_FURNACE_OFF_TIME_LOOPS++;
-    if (TEST_MODE) {
-       if (furnaceTestEvent.check()) gotoFurnPreHeat();
-    }
-    else if (ADC1_COUNT > FURN_ON_COUNTS) gotoFurnPreHeat();
+    if (ADC1_COUNT > FURN_ON_COUNTS) gotoFurnPreHeat();
 }
 
 void gotoFurnPreHeat() {
-    FurnState = FURN_PRE_HEAT;
+    FurnaceState= FURN_PRE_HEAT;
     ledBlinkFast();
     preHeatCount = PREHEAT_TIME * LOOPS_PER_SEC;    // 30 seconds of pre-heat 
-    VLog("Furnace Pre-Heat");
+    Log("Furnace Pre-Heat " + String(PREHEAT_TIME) + " sec");
+    writeEventData("PreHeat");
     stateTimerLoops = 0;  
 }
 
@@ -89,42 +85,41 @@ void processFurnPreHeat() {
     LAST_FURNACE_ON_TIME_LOOPS++;
     preHeatCount--;
     if (preHeatCount == 0) gotoFurnOn();
+    else if (checkForOff()) gotoFurnOff();
 }
 
 void gotoFurnOn() {
-    FurnState = FURN_ON;
+    FurnaceState= FURN_ON;
     ledOn(); 
-    VLog("Furnace ON");      
-    if (TEST_MODE) {
-       int nextEvent = random(20,40);
-       furnaceTestEvent.setSec(nextEvent);
-       Serial.println("Furnace CoolDown Event: " + String(nextEvent) + "sec");
-    }
+    Log("Furnace ON");
+    writeEventData("On");      
     CountData.reset();
     Counts.reset();  
     stateTimerLoops = 0;
 }
 
 void processFurnOn() {
-    FURNACE_ON_TIME_LOOPS++;
-    LAST_FURNACE_ON_TIME_LOOPS++;
-    
-    if (TEST_MODE) {
-       if (furnaceTestEvent.check()) gotoFurnCoolDown();
-    }
-    else {
-       CountData.addData(ADC1_COUNT);
-       float avg = CountData.avg();
-       Counts.addData(avg);
-       if (avg < FURN_OFF_COUNTS && CountData.count() > 5) gotoFurnCoolDown();
-    }
+   FURNACE_ON_TIME_LOOPS++;
+   LAST_FURNACE_ON_TIME_LOOPS++;
+   CountData.addData(ADC1_COUNT);
+   float avg = CountData.avg();
+   Counts.addData(avg);
+   if (checkForOff()) gotoFurnCoolDown();
+}
+
+bool checkForOff() {
+   CountData.addData(ADC1_COUNT);
+   float avg = CountData.avg();
+   Counts.addData(avg);
+   return ((avg < FURN_OFF_COUNTS) && (CountData.count() > 5));
 }
 
 void gotoFurnCoolDown() {
-    FurnState = FURN_COOL_DOWN;
+    FurnaceState= FURN_COOL_DOWN;
     ledBlinkSlow();
     coolDownCount = COOLDOWN_TIME * LOOPS_PER_SEC;    // 30 seconds of Cool Down   
-    VLog("Furnace Cool Down");
+    Log("Furnace Cool Down " + String(PREHEAT_TIME) + " sec");
+    writeEventData("CoolDown");
     stateTimerLoops = 0;   
 }
 
@@ -161,16 +156,12 @@ void saveCycleData() {
 }
 
 void gotoFurnOff() {
-    FurnState = FURN_OFF;
+    FurnaceState= FURN_OFF;
     ledOff();
     preHeatCount = 0;
     coolDownCount = 0;
-    VLog("Furnace OFF");      
-    if (TEST_MODE) {
-       int nextEvent = random(25,35);
-       furnaceTestEvent.setSec(nextEvent);
-       Serial.println("Furnace On Event: " + String(nextEvent) + "sec");
-    }
+    Log("Furnace OFF");
+    writeEventData("Off");       
     stateTimerLoops = 0;
 }
 
@@ -191,13 +182,17 @@ void updateAvgCycleTime() {
 }
 
 void initFurnace() {
-    FurnState = FURN_OFF;
+    FurnaceState= FURN_OFF;
+    
+    // TEST MODE
     if (TEST_MODE) {
-        furnaceTestEvent.setSec(15);
-        writeFirebaseEvent.setMin(6);   // First write after 3 mins in test mode
+      initFurnaceSim();
+      writeFirebaseEvent.setMin(6);   // First write after 6 mins in test mode
     }
+
+    // NORMAL MODE
     else {
-        writeFirebaseEvent.setMin(FB_WRITE_TIME_MIN);
+      writeFirebaseEvent.setMin(FB_WRITE_TIME_MIN);
     }
 }
 
@@ -213,10 +208,10 @@ void processFBWriteEvent() {
 }
 
 String FurnStateTxt() {
-    if (FurnState == FURN_OFF) return String("Furn OFF");
-    else if (FurnState == FURN_PRE_HEAT) return String("Pre-Heat");
-    else if (FurnState == FURN_COOL_DOWN) return String("Fan Only");
-    else if (FurnState == FURN_ON) return String("Furn ON"); 
+    if (FurnaceState== FURN_OFF) return String("Furn OFF");
+    else if (FurnaceState== FURN_PRE_HEAT) return String("Pre-Heat");
+    else if (FurnaceState== FURN_COOL_DOWN) return String("Fan Only");
+    else if (FurnaceState== FURN_ON) return String("Furn ON"); 
     return "ERROR"; 
 }
 

@@ -87,7 +87,7 @@ bool FirebaseClient::writeString(const String& base, const char* field, const St
 bool FirebaseClient::writeJSON(const String& path, FirebaseJson& json) {
   String out;
   json.toString(out, true);
-  Serial.printf("JSON bytes: %u\n", (unsigned)out.length());
+  Serial.printf("Write %u bytes to Firebase\n", (unsigned)out.length());
 
   const bool ok = Firebase.RTDB.updateNode(&fbdo, path, &json);
   if (!ok) lastErr = fbdo.errorReason();

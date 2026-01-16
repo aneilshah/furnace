@@ -33,7 +33,7 @@ bool syncTime(uint32_t timeoutMs = 15000) {
   while (millis() - start < timeoutMs) {
     time_t now = time(nullptr);
     if (now > 1700000000) {
-      Serial.print("Epoch time: ");
+      Serial.print("Valid Epoch time: ");
       Serial.println((long)now);
       return true;
     }
@@ -42,7 +42,7 @@ bool syncTime(uint32_t timeoutMs = 15000) {
   }
 
   Serial.println("\nNTP sync FAILED");
-  Serial.print("Epoch time: ");
+  Serial.print("Invalid Epoch time: ");
   Serial.println((long)time(nullptr));
   return false;
 }

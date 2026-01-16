@@ -14,6 +14,7 @@
 #include "wifiFunctions.h"
 #include "firebase.h"
 #include "ntp.h"
+#include "test_mode.h"
 
 // Global Constants
 #define LOG_TIME 0  // serial log for execution times
@@ -21,7 +22,7 @@
 // Configurations
 #define FB_WRITE_TIME_MIN 480
 
-const char* VERSION = "V0.01";
+const char* VERSION = "V0.02";
 
 // PIN MAPPINGS
 #define  ADC1_PIN 35
@@ -37,7 +38,7 @@ String CONN_STATUS = "OFF";
 int LOOP_COUNT = 0;
 int LOOP_TIME = 1000;
 int ISR_CNT = 0;
-unsigned int DELAY = 92;  // avg code run time is 8ms
+unsigned int DELAY = 96;  // avg code run time is 8ms
 
 // Error Counts
 int WIFI_ERR = 0;
@@ -128,10 +129,18 @@ void loop()
 }
 
 void loop100ms() {
+    // Run Simulation if needed
+    if (TEST_MODE) simulateFurnace();
+
+    // Read Inputs
     readDigitalButton(); 
     readADC();
-    displayText();
+
+    // Run Main Logic
     processFurnaceEvent();
+
+    // Update Outputs
+    displayText();
     updatePopupScreen();
     processLED();
 
@@ -185,17 +194,13 @@ void writeDAC() {
 
 void readADC() {
     long startTime=micros();
-    ADC1_COUNT = analogRead(ADC1_PIN);
+
+    if (TEST_MODE) ADC1_COUNT = getTestModeADC();
+    else ADC1_COUNT = analogRead(ADC1_PIN);
+
     ADC1_VOLT = 3.3 * (ADC1_COUNT / 4095.0);
     TLog("ADC read time: ", startTime);
     TLog("ADC: " + String(ADC1_COUNT), startTime);
-    if (TEST_MODE) {
-
-    }
-    else {
-      if (ADC1_COUNT > int(0.1 / 3.3 * 4096)) {
-      }
-    }
 }
 
 void readDigital() {
@@ -245,6 +250,10 @@ void processTestEvent() {
    }
 }
 
+void Log(String text) {
+  Serial.println(text);
+}
+
 void VLog(String text) {
   if (VERBOSE) Serial.println(text);
 }
@@ -286,3 +295,7 @@ void textStatus() {
     //email.sendEmail("aneilshah@yahoo.com", "Furnace Status", body);
     //email.sendEmail("7343555141@vtext.com", "Furnace", "\n" + body);     
 }
+
+// Version History
+// 0.1 Initial Release
+// 0.2 Jan-16-2026 Refactor Test Mode

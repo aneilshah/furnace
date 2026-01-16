@@ -10,7 +10,7 @@ extern int LOOP_TIME;
 extern const char* VERSION;
 extern int WIFI_ERR;
 
-#define TEST_MODE 0
+#define TEST_MODE 1
 #define VERBOSE 0
 
 #define OFF 0
@@ -22,3 +22,7 @@ extern int WIFI_ERR;
 
 // OLED MAIN MENU MODE
 #define MAIN_TIMEOUT_SEC 30.0
+
+// A2D Constants
+#define FURN_ON_COUNTS  500  // 0.4V
+#define FURN_OFF_COUNTS 100  // 0.1V

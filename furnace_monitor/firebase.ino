@@ -34,6 +34,10 @@ void writeFurnaceData() {
   furnaceRepo.writeFurnaceData(false);
 }
 
+void writeEventData(String eventText) {
+  furnaceRepo.writeEventData(eventText);
+}
+
 // -----------------------------------------------------------------------------
 // setupFirebase(showDisplay)
 // -----------------------------------------------------------------------------

@@ -3,4 +3,5 @@
 
 void setupFirebase(bool showDisplay = true);
 void writeFurnaceData();
+void writeEventData(String eventText);
 int firebaseOK();

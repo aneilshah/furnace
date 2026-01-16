@@ -17,8 +17,12 @@ extern int OFF_PCT;
 
 // Furnace Defines
 #define HOLD_TIME 100;        // 10 sec (100ms per count)
-#define TEST_TRIGGER_MIN 50   // 50 seconds
-#define TEST_TRIGGER_MAX 70   // 70 seconds
+
+// Furnace States
+#define FURN_OFF 0
+#define FURN_PRE_HEAT 1
+#define FURN_ON 2
+#define FURN_COOL_DOWN 3
 
 // Furnace Functions
 void processFurnaceEvent();
@@ -26,6 +30,7 @@ void initFurnace();
 void processFBWriteEvent();
 String FurnStateTxt();
 String StateClock();
+int getFurnaceState();
 
 // Buffer Class
 

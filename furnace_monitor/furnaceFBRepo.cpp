@@ -141,3 +141,48 @@ void FurnaceFBRepo::writeFurnaceData(bool writeDailyData) {
 
   oledMain(MAIN_TIMEOUT_SEC);
 }
+
+void FurnaceFBRepo::writeEventData(const String& eventText) {
+  if (!firebaseOK()) {
+    Serial.println("Firebase Not Connected (writeEvent)");
+    return;
+  }
+
+  // Year gating consistent with writeFurnaceData()
+  String year = "0";
+  if (validClock()) {
+    year = getYearStr();
+  }
+
+  const int yearInt = year.toInt();
+  if (yearInt < 2026) {
+    Serial.println("Skipping Firebase event write: Year < 2026 (" + year + ")");
+    return;
+  }
+
+  String PATH = String(FB_PATH);
+  if (TEST_MODE) PATH = String(FB_TEST_PATH) + "/" + year;
+  else PATH = PATH + "/" + year;
+
+  // Use the same timestamp key strategy as your logs
+  const String timestampKey = getTimelog();
+
+  const String URL = "/furnace/" + PATH + "/events/" + timestampKey + "/";
+
+  FirebaseJson json;
+
+  // Nested data object
+  json.set("day", getDayStr());
+  json.set("month", getMonthStr());
+  json.set("year", getYearStr());
+  json.set("hour", getHourStr());
+  json.set("min", getMinStr());
+  json.set("sec", getSecStr());
+  json.set("event", eventText);
+  json.set("timestamp", timestampKey);
+
+  if (!fb.writeJSON(URL, json)) {
+    Serial.println("FB writeEvent failed: " + fb.lastError());
+    return;
+  }
+}
