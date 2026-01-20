@@ -30,7 +30,7 @@ void simulateFurnace() {
     // Look for Turn On Event
     if (furnaceTestEvent.check()) {
       setTestModeADC(true);
-      int nextEvent = random(PREHEAT_TIME+5, PREHEAT_TIME+15);
+      int nextEvent = random(PREHEAT_TIME+25, PREHEAT_TIME+35);
       furnaceTestEvent.setSec(nextEvent);  // Set Cool Down Event
       Serial.println("Set Next Test Mode Furnace Cool Down Event: " + String(nextEvent) + " sec");
     }
@@ -44,7 +44,7 @@ void simulateFurnace() {
     // Look for Turn Off Event
     if (furnaceTestEvent.check()) {
       setTestModeADC(false);
-      int nextEvent = random(COOLDOWN_TIME+5,COOLDOWN_TIME+15);
+      int nextEvent = random(COOLDOWN_TIME+25,COOLDOWN_TIME+35);
       furnaceTestEvent.setSec(nextEvent);
       Serial.println("Set Next Test Mode Furnace PreHeat Event: " + String(nextEvent) + " sec");
     }

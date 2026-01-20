@@ -166,6 +166,9 @@ void loop1Sec() {
 void loop10Sec() {
     ensureServerStarted();
 
+    // Check Event Queue
+    //flushEventQueueTask(g_eventQ, fb, eventsUrlBase);
+
     static unsigned long startTime = millis();
 }
 

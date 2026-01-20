@@ -31,6 +31,7 @@ void processFBWriteEvent();
 String FurnStateTxt();
 String StateClock();
 int getFurnaceState();
+int getFurnaceStateDeltaSec();
 
 // Buffer Class
 
